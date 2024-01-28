@@ -72,7 +72,7 @@ def completely_random_assignment(
     # Default conditions for two and multi-arm trials
     if conditions is None:
         conditions = (
-            ["0", "1"]
+            [0, 1]
             if num_arms is None or num_arms == 2
             else ["T" + str(i) for i in range(1, num_arms + 1)]
         )
@@ -161,7 +161,7 @@ def completely_random_probabilities(
     # Default conditions for two and multi-arm trials
     if conditions is None:
         conditions = (
-            ["0", "1"]
+            [0, 1]
             if num_arms is None or num_arms == 2
             else ["T" + str(i) for i in range(1, num_arms + 1)]
         )
