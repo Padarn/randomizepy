@@ -51,4 +51,3 @@ def test_completely_random_probabilities():
     assert np.sum(probabilities[:, 1]) == 33, "Failed test_completely_random_probabilities: Incorrect number of units assigned to T2"
     assert np.sum(probabilities[:, 2]) == 34, "Failed test_completely_random_probabilities: Incorrect number of units assigned to T3"
     
-    # Add more test cases for other scenarios
