@@ -117,7 +117,6 @@ def completely_random_assignment(
         np.random.shuffle(full_assignments)
         return full_assignments.tolist()
 
-
 def completely_random_probabilities(
     N: int,
     m: Optional[int] = None,
@@ -210,7 +209,7 @@ def completely_random_probabilities(
 
 
 # Example usage
-Z = completely_random_assignment(N=100, m=50)
-print(np.bincount(Z))
+if __name__ == '__main__':
+    completely_random_assignment(N=100, m=50)
+    print(np.bincount(Z))
 
-# This is a direct translation. Some Python-specific optimizations or stylistic changes might be needed.
