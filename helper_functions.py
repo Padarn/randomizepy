@@ -15,7 +15,7 @@ def check_randomizr_arguments(
     num_arms=None,
     simple=None,
     conditions=None,
-    **kwargs
+    **kwargs,
 ):
     if clusters is not None:
         N = len(set(clusters))
@@ -126,29 +126,80 @@ def check_randomizr_arguments(
 
 class CheckRA:
     def __init__(self):
-        pass
+        conflict_args = [
+            "prob",
+            "prob_each",
+            "prob_unit",
+            "m",
+            "m_unit",
+            "m_each",
+            "block_prob",
+            "block_prob_each",
+            "block_m",
+            "block_m_each",
+        ]
+
+    @classmethod
+    def check_arguments(cls, **kwargs):
+        specified_args = {
+            k: v for k, v in kwargs.items() if k in cls.conflict_args and v is not None
+        }
+
+        if len(specified_args) > 1:
+            raise ValueError(
+                f"Please specify only one of {', '.join(specified_args.keys())}."
+            )
+        elif len(specified_args) == 1:
+            arg, value = next(iter(specified_args.items()))
+            arg_block = arg.startswith("block_")
+            arg_each = arg.endswith("_each")
+
+            if arg_block and kwargs.get("blocks") is None:
+                raise ValueError(f"Specified `{arg}` but blocks is None.")
+
+            if kwargs.get("simple") is True and "prob" not in arg:
+                raise ValueError(f"You can't specify `{arg}` when simple = True.")
+
+            getattr(cls, f"check_{arg}")(
+                arg,
+                arg_block,
+                arg_each,
+                value,
+                kwargs.get("num_arms"),
+                kwargs.get("conditions"),
+            )
+            getattr(cls, arg)(
+                kwargs.get("N"),
+                kwargs.get("blocks"),
+                kwargs.get("clusters"),
+                kwargs.get("num_arms"),
+                kwargs.get("conditions"),
+                kwargs.get("simple"),
+                value,
+            )
 
     def check_ra_arg_num_arms_conditions(
         arg, arg_block, arg_each, value, num_arms, conditions
     ):
-        if not arg_each:
-            w = 2
-            num_arms_fmt = "If {} and num_arms are both specified, {} must be length 2 and num_arms must be 2."
-            conditions_fmt = "If {} and conditions are both specified, {} and conditions must both be length 2."
-        elif not arg_block:
-            w = len(value)
-            num_arms_fmt = "If {} and num_arms are both specified, the length of {} must be equal to num_arms."
-            conditions_fmt = "If {} and conditions are both specified, the length of {} must be equal to the length of conditions."
-        else:
-            w = value.shape[1]
-            num_arms_fmt = "If {} and num_arms are both specified, the number of columns of {} must be equal to num_arms."
-            conditions_fmt = "If {} and conditions are both specified, the length of conditions must be equal to the number of columns of {}."
+        w = 2 if not arg_each else (len(value) if not arg_block else value.shape[1])
 
         if num_arms is not None and num_arms != w:
-            raise ValueError(num_arms_fmt.format(arg, arg))
+            num_arms_suffix = (
+                " and num_arms must be 2"
+                if not arg_each
+                else (" equal to num_arms" if not arg_block else " equal to num_arms")
+            )
+            raise ValueError(
+                f"If {arg} and num_arms are both specified, {arg} must be length {w}{num_arms_suffix}."
+            )
 
         if conditions is not None and len(conditions) != w:
-            raise ValueError(conditions_fmt.format(arg, arg))
+            conditions_suffix = (
+                "" if not arg_each else " equal to the length of conditions"
+            )
+            raise ValueError(
+                f"If {arg} and conditions are both specified, {arg} and conditions must both be length {w}{conditions_suffix}."
+            )
 
     def prob(N, blocks, clusters, num_arms, conditions, simple, prob):
         if any(p > 1 or p < 0 for p in prob):
